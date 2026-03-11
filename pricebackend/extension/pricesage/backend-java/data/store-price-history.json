@@ -1,0 +1,164 @@
+{
+  "test shoe": {
+    "flipkart": {
+      "product": "Test Shoe",
+      "store": "Flipkart",
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 999,
+          "fetchedAt": "2026-02-25T16:47:56.809Z",
+          "link": "https://flipkart.com/x"
+        }
+      ]
+    }
+  },
+  "calvin klein gauge sport analog black dial men s watch 25200067": {
+    "amazon": {
+      "product": "Calvin Klein Gauge Sport Analog Black Dial Men's Watch-25200067",
+      "store": "Amazon",
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 10583,
+          "fetchedAt": "2026-02-25T18:30:16.318Z",
+          "link": "https://www.amazon.in/dp/B09S5P6JVC/ref=syn_sd_onsite_desktop_0?ie=UTF8&psc=1&pd_rd_plhdr=t&aref=r3vUUUNxtW"
+        },
+        {
+          "day": "2026-02-26",
+          "price": 10583,
+          "fetchedAt": "2026-02-26T16:20:47.248Z",
+          "link": "https://www.amazon.in/dp/B09S5P6JVC/ref=syn_sd_onsite_desktop_0?ie=UTF8&psc=1&pd_rd_plhdr=t&aref=r3vUUUNxtW"
+        }
+      ],
+      "trackKey": "calvin klein gauge sport analog black dial men s watch 25200067",
+      "targetPrice": 0
+    }
+  },
+  "mmtc pamp lotus 24k 999 9 gold": {
+    "touch925": {
+      "product": "MMTC PAMP Lotus 24k 999 9 Gold",
+      "store": "Touch925",
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 144280,
+          "fetchedAt": "2026-02-25T16:59:02.596Z",
+          "link": "https://www.google.com/search?ibp=oshop&q=mmtc pamp lotus 24k 999 gold&prds=productid:4822051417986944885,headlineOfferDocid:4822051417986944885,imageDocid:15600682833918693659,pvt:hg&hl=en&gl=in&udm=28"
+        }
+      ]
+    }
+  },
+  "24k 999 9 purest 1 gram gold bar lotus 1 gm coin": {
+    "touch925": {
+      "product": "24K (999.9+) Purest 1 Gram Gold Bar, Lotus 1 gm Coin",
+      "store": "Touch925",
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 144280,
+          "fetchedAt": "2026-02-25T16:59:14.857Z",
+          "link": "https://www.google.com/search?ibp=oshop&q=mmtc pamp lotus 24k 999 gold&prds=productid:4822051417986944885,headlineOfferDocid:4822051417986944885,imageDocid:15600682833918693659,pvt:hg&hl=en&gl=in&udm=28"
+        }
+      ]
+    }
+  },
+  "flipkart com campus og 33 flipkart": {
+    "flipkart": {
+      "product": "Campus OG-33 Sneakers For Men",
+      "store": "Flipkart",
+      "trackKey": "flipkart com campus og 33 flipkart",
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 949,
+          "fetchedAt": "2026-02-25T17:11:16.645Z",
+          "link": null
+        }
+      ]
+    }
+  },
+  "www amazon in mmtc pamp lotus 24k 999 9 gold dp b08kspyjx2 ref sr 1 1 sspa touch925": {
+    "touch925": {
+      "product": "MMTC PAMP Lotus 24k 999 9 Gold",
+      "store": "Touch925",
+      "trackKey": "www amazon in mmtc pamp lotus 24k 999 9 gold dp b08kspyjx2 ref sr 1 1 sspa touch925",
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 144280,
+          "fetchedAt": "2026-02-25T17:13:47.705Z",
+          "link": "https://www.google.com/search?ibp=oshop&q=mmtc pamp lotus 24k 999 gold&prds=productid:4822051417986944885,headlineOfferDocid:4822051417986944885,imageDocid:15600682833918693659,pvt:hg&hl=en&gl=in&udm=28"
+        }
+      ]
+    }
+  },
+  "24k 999 9 purest 1 gram gold bar lotus 1 gm coin ubuy": {
+    "ubuy": {
+      "product": "24K (999.9+) Purest 1 Gram Gold Bar, Lotus 1 gm Coin",
+      "store": "Ubuy",
+      "trackKey": "24k 999 9 purest 1 gram gold bar lotus 1 gm coin ubuy",
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 333037,
+          "fetchedAt": "2026-02-25T17:30:28.476Z",
+          "link": "https://www.google.com/search?ibp=oshop&q=24k 999 purest gram gold bar lotus&prds=productid:12484452002209906230,headlineOfferDocid:12484452002209906230,imageDocid:11730507540392474069,pvt:hg&hl=en&gl=in&udm=28"
+        }
+      ]
+    }
+  },
+  "demoshoe flipkart": {
+    "flipkart": {
+      "product": "Demo Shoe",
+      "store": "Flipkart",
+      "trackKey": "demoshoe flipkart",
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 950,
+          "fetchedAt": "2026-02-25T17:27:24.281Z",
+          "link": null
+        }
+      ]
+    }
+  },
+  "www google com search coinbazaar in": {
+    "coinbazaar in": {
+      "product": "MMTC PAMP Lotus 24k 999 9 Gold",
+      "store": "Coinbazaar.in",
+      "trackKey": "www google com search coinbazaar in",
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 9397,
+          "fetchedAt": "2026-02-25T18:00:16.035Z",
+          "link": "https://www.google.com/search?ibp=oshop&q=mmtc pamp lotus 24k 999 gold&prds=productid:16976038573400690701,headlineOfferDocid:16976038573400690701,imageDocid:12060573466899713990,pvt:hg&hl=en&gl=in&udm=28"
+        }
+      ]
+    }
+  },
+  "www google com search amazon in": {
+    "amazon in": {
+      "product": "dove intense repair shampoo 1 l",
+      "store": "amazon.in",
+      "trackKey": "www google com search amazon in",
+      "targetPrice": 999999,
+      "history": [
+        {
+          "day": "2026-02-25",
+          "price": 59900,
+          "fetchedAt": "2026-02-25T18:24:56.315Z",
+          "link": "https://www.google.com/search?ibp=oshop&q=apple iphone 15 128 gb&prds=productid:14766651957718559536,headlineOfferDocid:14766651957718559536,imageDocid:16792414773815500909,rds:PC_6601648695432433635|PROD_PC_6601648695432433635,pvt:hg&hl=en&gl=in&udm=28"
+        },
+        {
+          "day": "2026-02-26",
+          "price": 180,
+          "fetchedAt": "2026-02-26T13:48:57.371Z",
+          "link": "https://www.google.com/search?ibp=oshop&q=dove intense repair shampoo&prds=productid:5965210371553140198,headlineOfferDocid:5965210371553140198,imageDocid:16361448337174034754,rds:PC_1098454345383504969|PROD_PC_1098454345383504969,pvt:hg&hl=en&gl=in&udm=28"
+        }
+      ],
+      "paused": true
+    }
+  }
+}

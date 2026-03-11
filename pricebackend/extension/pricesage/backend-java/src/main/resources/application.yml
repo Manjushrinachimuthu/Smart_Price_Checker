@@ -1,0 +1,14 @@
+﻿server:
+  port: 5000
+
+pricesage:
+  data-dir: ./data
+  tracking-refresh-ms: 1200000
+  compare-cache-ttl-ms: 180000
+  serp-api-key: ${SERP_API_KEY:}
+
+spring:
+  jackson:
+    serialization:
+      indent-output: true
+

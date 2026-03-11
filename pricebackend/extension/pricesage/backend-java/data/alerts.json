@@ -1,0 +1,17 @@
+[
+  {
+    "id": "new_low_www_google_com_search_amazon_in_amazon_in_180_2026_02_26t13_48",
+    "createdAt": "2026-02-26T13:48:57.377Z",
+    "read": true,
+    "sentTelegram": false,
+    "type": "new_low",
+    "priority": "high",
+    "product": "dove intense repair shampoo 1 l",
+    "store": "amazon.in",
+    "trackKey": "www google com search amazon in",
+    "price": 180,
+    "link": "https://www.google.com/search?ibp=oshop&q=dove intense repair shampoo&prds=productid:5965210371553140198,headlineOfferDocid:5965210371553140198,imageDocid:16361448337174034754,rds:PC_1098454345383504969|PROD_PC_1098454345383504969,pvt:hg&hl=en&gl=in&udm=28",
+    "title": "New tracked low",
+    "message": "amazon.in reached a new low: Rs 180"
+  }
+]

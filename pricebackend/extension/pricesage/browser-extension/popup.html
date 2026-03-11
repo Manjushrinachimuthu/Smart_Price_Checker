@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PriceSage</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <p class="kicker">PriceSage Capture</p>
+      <div class="head-row">
+        <h1>Product Quick Send</h1>
+        <button id="rescanBtn" type="button" class="ghost-btn">Rescan</button>
+      </div>
+      <p id="status" class="status">Reading current tab...</p>
+      <div class="meta-row">
+        <span id="pageTypeBadge" class="badge">Unknown Page</span>
+        <span id="confidenceBadge" class="badge neutral">Confidence: Low</span>
+      </div>
+
+      <section id="resultsPanel" class="results hidden">
+        <label for="resultSelect">Detected products</label>
+        <select id="resultSelect"></select>
+      </section>
+
+      <section id="card" class="card hidden">
+        <img id="productImage" alt="Product" class="image" />
+        <p id="productTitle" class="title"></p>
+        <p id="productPrice" class="price"></p>
+        <p id="productDetails" class="details"></p>
+      </section>
+
+      <div class="actions">
+        <button id="captureBtn" type="button">Send to Backend</button>
+        <button id="openBtn" type="button" class="primary">Open in PriceSage</button>
+      </div>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

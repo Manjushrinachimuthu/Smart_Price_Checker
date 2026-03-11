@@ -1,0 +1,176 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f4f8ff;
+  color: #10203a;
+}
+
+.popup {
+  width: 380px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #2d62c9;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.ghost-btn {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.status {
+  margin: 0;
+  font-size: 13px;
+  color: #4a6286;
+}
+
+.meta-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  border: 1px solid #d3e2fa;
+  background: #edf4ff;
+  color: #1f4f98;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge.good {
+  border-color: #c7ebd8;
+  background: #e9fbf1;
+  color: #0f6b3b;
+}
+
+.badge.neutral {
+  border-color: #d9e0eb;
+  background: #f5f7fb;
+  color: #46607f;
+}
+
+.badge.warn {
+  border-color: #ffe1b5;
+  background: #fff4e1;
+  color: #8b5603;
+}
+
+.results {
+  display: grid;
+  gap: 6px;
+}
+
+.results label {
+  font-size: 12px;
+  color: #335377;
+  font-weight: 700;
+}
+
+.results select {
+  width: 100%;
+  border: 1px solid #c9daf5;
+  border-radius: 10px;
+  min-height: 34px;
+  background: #fff;
+  color: #1c365d;
+  font-size: 12px;
+  padding: 0 8px;
+}
+
+.card {
+  border: 1px solid #d7e4f9;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.hidden {
+  display: none;
+}
+
+.image {
+  width: 100%;
+  height: 120px;
+  border-radius: 8px;
+  border: 1px solid #e1eaf8;
+  object-fit: contain;
+  background: #f9fbff;
+}
+
+.title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.price {
+  margin: 0;
+  color: #0b7a4a;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.details {
+  margin: 0;
+  color: #567196;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+button {
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid #bfd2f2;
+  background: #ffffff;
+  color: #1c365d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button.primary {
+  border-color: #0f62fe;
+  background: linear-gradient(135deg, #0f62fe 0%, #0043ce 100%);
+  color: #ffffff;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

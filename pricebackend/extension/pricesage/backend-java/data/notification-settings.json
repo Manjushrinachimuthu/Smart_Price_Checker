@@ -1,0 +1,10 @@
+{
+  "inAppEnabled": false,
+  "browserEnabled": true,
+  "telegramEnabled": false,
+  "telegramChatId": "",
+  "dropPercentThreshold": 3,
+  "cooldownHours": 6,
+  "quietHoursStart": "22:00",
+  "quietHoursEnd": "08:00"
+}

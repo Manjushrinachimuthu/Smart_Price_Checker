@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "PriceSage Quick Capture",
+  "version": "0.1.0",
+  "description": "Capture product info from shopping pages and open PriceSage compare.",
+  "permissions": ["activeTab", "scripting", "tabs"],
+  "host_permissions": [
+    "http://localhost:5000/*",
+    "http://localhost:5173/*",
+    "https://*/*",
+    "http://*/*"
+  ],
+  "action": {
+    "default_title": "PriceSage",
+    "default_popup": "popup.html"
+  }
+}
