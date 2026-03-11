@@ -55,4 +55,4 @@ mvn spring-boot:run
 
 ## 👨‍💻 Author
 
-Manjushri Nachimuthu
+Manjushri N
