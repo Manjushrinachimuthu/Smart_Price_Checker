@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
+import { API_BASE } from "./apiConfig";
 
 function Login({ onLoginSuccess }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -11,37 +12,53 @@ function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    const response = await fetch("http://localhost:8080/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
 
-    const data = await response.text();
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => null);
+        throw new Error(errorText || "Unable to reach login service");
+      }
 
-    if (data === "Login Successful") {
-      alert("Login Successful");
-      onLoginSuccess(email);
-      navigate("/home");
-    } else {
-      alert("Invalid Email or Password");
+      const data = await response.text();
+
+      if (data === "Login Successful") {
+        alert("Login Successful");
+        onLoginSuccess(email);
+        navigate("/home");
+      } else {
+        alert("Invalid Email or Password");
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Unable to reach the authentication service. Please start the backend or check your network.");
     }
   };
 
   const handleRegister = async () => {
-    const response = await fetch("http://localhost:8080/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ username, email, password })
-    });
+    try {
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, email, password })
+      });
 
-    const data = await response.text();
-    alert(data);
-    setIsRegister(false);
+      const message = await response.text();
+
+      alert(message);
+      setIsRegister(false);
+    } catch (error) {
+      console.error("Registration failed:", error);
+      alert("Unable to reach the authentication service. Please start the backend or check your network.");
+    }
   };
 
   return (

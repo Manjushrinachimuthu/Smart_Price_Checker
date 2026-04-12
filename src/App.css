@@ -9,6 +9,7 @@
   --accent: #ffd75a;
   --accent-2: #fff1b8;
   --danger: #e63946;
+  --success: #8ff1bf;
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
@@ -48,23 +49,26 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(circle at 15% 20%, rgba(212, 175, 55, 0.2), transparent 30%),
-    radial-gradient(circle at 85% 0%, rgba(242, 201, 76, 0.18), transparent 33%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.96) 0%, rgba(5, 5, 5, 0.8) 45%, rgba(24, 12, 4, 0.64) 75%, rgba(0, 0, 0, 0.85) 100%),
+    radial-gradient(circle at 15% 20%, rgba(212, 175, 55, 0.28), transparent 30%),
+    radial-gradient(circle at 85% 0%, rgba(255, 215, 120, 0.22), transparent 33%),
     radial-gradient(circle at 80% 80%, rgba(130, 94, 20, 0.28), transparent 35%),
     url("./assets/webpage-bg.jpg");
   background-size:
+    cover,
     160px 160px,
     200px 200px,
     220px 220px,
     cover;
   background-position:
+    center,
     15% 20%,
     85% 0%,
     80% 80%,
     center;
-  opacity: 0.92;
-  mix-blend-mode: overlay;
-  filter: saturate(1.1);
+  opacity: 0.9;
+  mix-blend-mode: normal;
+  filter: brightness(0.6) saturate(1.1);
   pointer-events: none;
   z-index: -1;
 }
@@ -1211,9 +1215,65 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+.cart-price-breakdown {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.cart-price-breakdown small {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.cart-price-breakdown p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.cart-price-current {
+  color: var(--accent);
+}
+
+.cart-price-profit {
+  color: var(--success);
+}
+
 .cart-summary {
   padding: 16px;
   text-align: left;
+  display: grid;
+  gap: 14px;
+}
+
+.cart-summary-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.cart-summary-meta span {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cart-summary-meta strong {
+  font-size: 1.1rem;
+}
+
+.cart-summary-savings {
+  color: var(--success);
+  font-weight: 700;
+  grid-column: 1 / -1;
 }
 
 .cart-summary .danger-btn {
@@ -1318,6 +1378,36 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.alerts-price-breakdown {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.alerts-price-breakdown small {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.alerts-price-breakdown p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.alerts-price-current {
+  color: var(--accent);
+}
+
+.alerts-price-profit {
+  color: var(--success);
 }
 
 .alerts-product-card {

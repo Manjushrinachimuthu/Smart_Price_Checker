@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
+import { API_BASE } from "./apiConfig";
 
 function Store({ addToCart }) {
   const [search, setSearch] = useState("");
@@ -8,7 +9,7 @@ function Store({ addToCart }) {
   const handleSearch = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8080/products/search?name=${search}`
+        `${API_BASE}/products/search?name=${search}`
       );
 
       const data = await response.json();

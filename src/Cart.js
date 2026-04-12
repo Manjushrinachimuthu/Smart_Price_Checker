@@ -1,5 +1,40 @@
 import React, { useState } from "react";
 import "./App.css";
+import { API_BASE } from "./apiConfig";
+
+const currencyFormatter = new Intl.NumberFormat("en-IN");
+
+const formatCurrency = (value) => {
+  const normalized = Number(String(value || "").replace(/,/g, ""));
+  return Number.isFinite(normalized) ? `Rs. ${currencyFormatter.format(Math.round(normalized))}` : "Rs. 0";
+};
+
+const parsePriceValue = (value) => {
+  const normalized = Number(String(value || "").replace(/,/g, ""));
+  return Number.isFinite(normalized) ? normalized : 0;
+};
+
+const getCartItemMetrics = (item) => {
+  const reducedPrice = parsePriceValue(item.price ?? item.reducedPrice ?? item.sellingPrice ?? 0);
+  const previousPrice = parsePriceValue(
+    item.previousPrice ??
+      item.prevPrice ??
+      item.listPrice ??
+      item.originalPrice ??
+      item.mrp ??
+      item.addedPrice ??
+      reducedPrice
+  );
+  const impliedProfit = Math.max(previousPrice - reducedPrice, 0);
+  const providedProfit = parsePriceValue(item.profit ?? item.ourProfit ?? 0);
+  const profit = providedProfit > 0 ? providedProfit : impliedProfit;
+  return {
+    reducedPrice,
+    previousPrice,
+    profit,
+    savings: Math.max(previousPrice - reducedPrice, 0)
+  };
+};
 
 function Cart({ cart = [], setCart, currentUser }) {
   const [orderMessage, setOrderMessage] = useState("");
@@ -41,7 +76,7 @@ function Cart({ cart = [], setCart, currentUser }) {
     setOrderMessage("Your order has been placed successfully.");
 
     try {
-      const response = await fetch("http://localhost:8080/alerts/subscribe", {
+      const response = await fetch(`${API_BASE}/alerts/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -73,8 +108,23 @@ function Cart({ cart = [], setCart, currentUser }) {
     }
   };
 
-  const totalAmount = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
+  const cartWithMetrics = cart.map((item) => ({
+    item,
+    metrics: getCartItemMetrics(item)
+  }));
+
+  const totalAmount = cartWithMetrics.reduce(
+    (total, { item, metrics }) => total + metrics.reducedPrice * (item.quantity || 1),
+    0
+  );
+
+  const totalPrevious = cartWithMetrics.reduce(
+    (total, { item, metrics }) => total + metrics.previousPrice * (item.quantity || 1),
+    0
+  );
+
+  const totalProfit = cartWithMetrics.reduce(
+    (total, { item, metrics }) => total + metrics.profit * (item.quantity || 1),
     0
   );
 
@@ -102,7 +152,7 @@ function Cart({ cart = [], setCart, currentUser }) {
       ) : (
         <>
           <section className="cart-grid">
-            {cart.map((item, index) => (
+            {cartWithMetrics.map(({ item, metrics }, index) => (
               <article key={index} className="cart-card">
                 {(item.imageUrl || item.image) && (
                   <img
@@ -114,8 +164,22 @@ function Cart({ cart = [], setCart, currentUser }) {
 
                 <div>
                   <h4>{item.name}</h4>
-                  <p><strong>Price:</strong> Rs. {item.price}</p>
                   <p><strong>Quantity:</strong> {item.quantity}</p>
+
+                  <div className="cart-price-breakdown">
+                    <div>
+                      <small>Previous</small>
+                      <p className="cart-price-previous">{formatCurrency(metrics.previousPrice)}</p>
+                    </div>
+                    <div>
+                      <small>Reduced</small>
+                      <p className="cart-price-current">{formatCurrency(metrics.reducedPrice)}</p>
+                    </div>
+                    <div>
+                      <small>Profit</small>
+                      <p className="cart-price-profit">{formatCurrency(metrics.profit)}</p>
+                    </div>
+                  </div>
 
                   <div className="cart-actions">
                     <button onClick={() => increaseQty(index)}>+</button>
@@ -128,7 +192,22 @@ function Cart({ cart = [], setCart, currentUser }) {
           </section>
 
           <section className="panel cart-summary">
-            <h3>Total Amount: Rs. {totalAmount}</h3>
+            <h3>Total Amount: {formatCurrency(totalAmount)}</h3>
+            <div className="cart-summary-meta">
+              <p>
+                <span>Previous total</span>
+                <strong>{formatCurrency(totalPrevious)}</strong>
+              </p>
+              <p>
+                <span>Profit</span>
+                <strong>{formatCurrency(totalProfit)}</strong>
+              </p>
+              {totalPrevious > totalAmount && (
+                <p className="cart-summary-savings">
+                  You saved {formatCurrency(totalPrevious - totalAmount)} today
+                </p>
+              )}
+            </div>
             <div>
               <button className="danger-btn" onClick={clearCart}>Clear Cart</button>
               <button className="success-btn" onClick={placeOrder}>Place Order</button>

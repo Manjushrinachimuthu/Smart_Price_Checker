@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PriceGraph from "./PriceGraph";
 
 const inrFormatter = new Intl.NumberFormat("en-IN");
 const compactFormatter = new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 });
@@ -8,7 +9,7 @@ function formatReviewCount(value) {
   return compactFormatter.format(value);
 }
 
-export default function PriceCard({ item, bestPrice, logo, onTrack, isTracked }) {
+export default function PriceCard({ item, bestPrice, logo, onTrack, isTracked, priceHistory }) {
   const isBest = item.price === bestPrice;
   const canOpen = Boolean(item.link);
   const [brokenLogo, setBrokenLogo] = useState(false);
@@ -88,6 +89,11 @@ export default function PriceCard({ item, bestPrice, logo, onTrack, isTracked })
       >
         {isTracked ? "Tracking Enabled" : "Track This Store"}
       </button>
+      {priceHistory?.length > 0 && (
+        <div className="card-graph">
+          <PriceGraph history={priceHistory} />
+        </div>
+      )}
     </article>
   );
 }

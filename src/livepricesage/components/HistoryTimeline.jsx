@@ -2,7 +2,7 @@ export default function HistoryTimeline({ history, onReuse, onClear, onRemove })
   const inrFormatter = new Intl.NumberFormat("en-IN");
 
   return (
-    <section className="timeline">
+    <section className="panel timeline">
       <div className="timeline-header">
         <h3>Recent Searches</h3>
         {history.length > 0 && (
@@ -29,7 +29,7 @@ export default function HistoryTimeline({ history, onReuse, onClear, onRemove })
             </div>
             <p className="timeline-title">{item.product}</p>
             <div className="timeline-row">
-              <span>{item.sourceStore || "Store unknown"} â€¢ {new Date(item.lastSearchedAt || item.date).toLocaleString()}</span>
+              <span>{item.sourceStore || "Store unknown"} • {new Date(item.lastSearchedAt || item.date).toLocaleString()}</span>
               <span className="timeline-price">
                 {Number.isFinite(item.lastBestPrice)
                   ? `Lowest Rs ${inrFormatter.format(item.lastBestPrice)}`
@@ -47,4 +47,3 @@ export default function HistoryTimeline({ history, onReuse, onClear, onRemove })
     </section>
   );
 }
-

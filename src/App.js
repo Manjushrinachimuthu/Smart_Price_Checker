@@ -16,6 +16,33 @@ import Store from "./Store";
 import Alerts from "./Alerts";
 import Cart from "./Cart";
 import "./App.css";
+import { API_BASE } from "./apiConfig";
+
+const parsePriceValue = (value) => {
+  const normalized = Number(String(value || "").replace(/,/g, ""));
+  return Number.isFinite(normalized) ? normalized : 0;
+};
+
+const getItemMetrics = (item) => {
+  const reducedPrice = parsePriceValue(item.price ?? item.sellingPrice ?? item.currentPrice ?? 0);
+  const previousPrice = parsePriceValue(
+    item.previousPrice ??
+      item.prevPrice ??
+      item.listPrice ??
+      item.originalPrice ??
+      item.mrp ??
+      item.addedPrice ??
+      reducedPrice
+  );
+  const impliedProfit = Math.max(previousPrice - reducedPrice, 0);
+  const providedProfit = parsePriceValue(item.profit ?? item.ourProfit ?? 0);
+  return {
+    reducedPrice,
+    previousPrice,
+    profit: providedProfit > 0 ? providedProfit : impliedProfit,
+    savings: Math.max(previousPrice - reducedPrice, 0)
+  };
+};
 
 function AppContent() {
   const location = useLocation();
@@ -28,7 +55,7 @@ function AppContent() {
 
   const getLatestProductDetails = useCallback(async (name) => {
     const response = await fetch(
-      `http://localhost:8080/products/search?name=${encodeURIComponent(name)}`
+      `${API_BASE}/products/search?name=${encodeURIComponent(name)}`
     );
 
     if (!response.ok) {
@@ -65,7 +92,8 @@ function AppContent() {
         return {
           ...item,
           price: latestMatch.price,
-          imageUrl: latestMatch.imageUrl || item.imageUrl || item.image
+          imageUrl: latestMatch.imageUrl || item.imageUrl || item.image,
+          addedPrice: item.addedPrice ?? parsePriceValue(item.price ?? item.currentPrice ?? item.reducedPrice ?? 0)
         };
       })
     );
@@ -144,7 +172,14 @@ function AppContent() {
         );
       }
 
-      return [...prevCart, { ...product, quantity: 1 }];
+      return [
+        ...prevCart,
+        {
+          ...product,
+          quantity: 1,
+          addedPrice: parsePriceValue(product.price ?? product.currentPrice ?? product.reducedPrice ?? 0)
+        }
+      ];
     });
   };
 
@@ -153,18 +188,30 @@ function AppContent() {
       return { success: false, message: "Missing user or products." };
     }
 
+    const cartWithMetrics = products.map((item) => ({
+      item,
+      metrics: getItemMetrics(item)
+    }));
+
+    const eligibleItems = cartWithMetrics.filter(({ metrics }) => metrics.savings > 0);
+    if (eligibleItems.length === 0) {
+      return { success: false, message: "No cart items have dropped below their added price yet." };
+    }
+
     try {
-      const response = await fetch("http://localhost:8080/alerts/subscribe", {
+      const response = await fetch(`${API_BASE}/alerts/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
           email: currentUser,
-          products: products.map((item) => ({
+          products: eligibleItems.map(({ item, metrics }) => ({
             id: item.id,
             name: item.name,
-            price: item.price,
+            price: metrics.reducedPrice,
+            previousPrice: metrics.previousPrice,
+            profit: metrics.profit,
             website: item.website,
             imageUrl: item.imageUrl || item.image || "",
             quantity: item.quantity || 1
@@ -177,7 +224,10 @@ function AppContent() {
         throw new Error(errorText || "Unable to register alerts");
       }
 
-      return { success: true, message: "Price alert email is enabled." };
+      return {
+        success: true,
+        message: `Price alert email enabled for ${eligibleItems.length} cart item${eligibleItems.length === 1 ? "" : "s"} that dropped in price.`
+      };
     } catch (error) {
       return {
         success: false,

@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import PriceCard from "./components/PriceCard";
+import CombinedPriceGraph from "./components/CombinedPriceGraph";
 import HistoryTimeline from "./components/HistoryTimeline";
 import "./pricesage.css";
+import { API_BASE } from "../apiConfig";
 
 const HISTORY_KEY = "searchHistoryV2";
 const TRACKED_STORE_KEY = "trackedStoreStateV1";
@@ -35,6 +37,7 @@ const STORE_DOMAIN_MAP = {
 
 const inrFormatter = new Intl.NumberFormat("en-IN");
 const compactFormatter = new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 });
+const PRICE_HISTORY_LIMIT = 30;
 
 function normalizeProductKey(input) {
   return String(input || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
@@ -123,6 +126,7 @@ export default function PriceSagePage() {
   const lastAlertTsRef = useRef(null);
   const autoCompareTriggeredRef = useRef(false);
   const unreadCount = alerts.filter((alert) => !alert.read).length;
+  const [priceHistories, setPriceHistories] = useState({});
 
   const mergeAlerts = (incoming, replace = false) => {
     setAlerts((prev) => {
@@ -148,7 +152,7 @@ export default function PriceSagePage() {
     try {
       const params = new URLSearchParams({ limit: "50" });
       if (since) params.set("since", since);
-      const res = await fetch(`http://localhost:8080/alerts?${params.toString()}`);
+      const res = await fetch(`${API_BASE}/alerts?${params.toString()}`);
       const payload = await res.json();
       if (!res.ok) return;
       const incoming = Array.isArray(payload.alerts) ? payload.alerts : [];
@@ -203,7 +207,7 @@ export default function PriceSagePage() {
 
     const loadSettings = async () => {
       try {
-        const res = await fetch("http://localhost:8080/notification-settings");
+        const res = await fetch(`${API_BASE}/notification-settings`);
         const payload = await res.json();
         if (res.ok) setSettings({ ...DEFAULT_NOTIFICATION_SETTINGS, ...payload });
       } catch {
@@ -262,6 +266,25 @@ export default function PriceSagePage() {
     return () => clearInterval(timer);
   }, [loading]);
 
+  const enqueuePriceHistory = (result) => {
+    if (!result || !Array.isArray(result.stores)) return;
+    setPriceHistories((prev) => {
+      const next = { ...prev };
+      result.stores.forEach((storeItem) => {
+        const priceValue = Number(storeItem?.price);
+        if (!Number.isFinite(priceValue)) return;
+        const historyKey = makeTrackKey({
+          product: result.product || "",
+          store: storeItem.store,
+          link: storeItem.link
+        });
+        const existing = next[historyKey] || [];
+        next[historyKey] = [...existing, { price: priceValue, timestamp: Date.now() }].slice(-PRICE_HISTORY_LIMIT);
+      });
+      return next;
+    });
+  };
+
   const compareByUrl = async (targetUrl) => {
     const nextUrl = String(targetUrl || "").trim();
     if (!nextUrl) return;
@@ -269,7 +292,7 @@ export default function PriceSagePage() {
     setError("");
     setData(null);
     try {
-      const res = await fetch("http://localhost:8080/compare", {
+      const res = await fetch(`${API_BASE}/compare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: nextUrl })
@@ -277,6 +300,7 @@ export default function PriceSagePage() {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Failed to compare prices");
       setData(result);
+      enqueuePriceHistory(result);
       setHistory((prev) => {
         const next = [
           {
@@ -312,7 +336,7 @@ export default function PriceSagePage() {
       link: storeItem.link
     });
     const targetPrice = parseTargetPrice(targetPriceInput);
-    const res = await fetch("http://localhost:8080/track-store", {
+    const res = await fetch(`${API_BASE}/track-store`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -351,7 +375,7 @@ export default function PriceSagePage() {
     if (!trackedStore) return;
     const nextEnabled = !trackingEnabled;
     try {
-      const res = await fetch("http://localhost:8080/track-store/toggle", {
+      const res = await fetch(`${API_BASE}/track-store/toggle`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -386,7 +410,7 @@ export default function PriceSagePage() {
           store: trackedStore.store,
           trackKey: trackedStore.trackKey
         });
-        const res = await fetch(`http://localhost:8080/track-store-history?${params.toString()}`);
+        const res = await fetch(`${API_BASE}/track-store-history?${params.toString()}`);
         const payload = await res.json();
         if (!res.ok || cancelled) return;
         setTrackedHistory(Array.isArray(payload.history) ? payload.history : []);
@@ -409,7 +433,7 @@ export default function PriceSagePage() {
     const next = { ...settings, ...patch };
     setSettings(next);
     try {
-      const res = await fetch("http://localhost:8080/notification-settings", {
+      const res = await fetch(`${API_BASE}/notification-settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(next)
@@ -422,7 +446,7 @@ export default function PriceSagePage() {
   };
 
   const markAlertRead = async (id = null) => {
-    await fetch("http://localhost:8080/alerts/mark-read", {
+    await fetch(`${API_BASE}/alerts/mark-read`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(id ? { id } : {})
@@ -498,6 +522,27 @@ export default function PriceSagePage() {
     return String(store.store || "").toLowerCase() === String(data.sourceStore || "").toLowerCase();
   })?.image || data?.stores?.find((store) => store?.image)?.image || null;
 
+  const exactStoreEntries = (Array.isArray(data?.stores) ? data.stores : []).map((item) => {
+    const historyKey = makeTrackKey({
+      product: data?.product,
+      store: item.store,
+      link: item.link
+    });
+    return {
+      item,
+      historyKey,
+      history: priceHistories[historyKey] || []
+    };
+  });
+
+  const combinedGraphEntries = exactStoreEntries
+    .map(({ item, history }) => ({
+      label: item.store || item.link || "Store",
+      store: item.store,
+      history
+    }))
+    .filter(({ history }) => history.length > 0);
+
   return (
     <div
       className={`app ${pageBackgroundImage ? "has-product-bg" : ""}`}
@@ -507,7 +552,7 @@ export default function PriceSagePage() {
       <Header />
       <main className="app-main">
         <section className="control-grid">
-          <section className="search-panel">
+          <section className="panel search-panel">
             <p className="eyebrow">Smart Price Intelligence</p>
             <h2>Search once. Compare all stores. Track every drop.</h2>
             <div className="search">
@@ -529,7 +574,7 @@ export default function PriceSagePage() {
             {error && <p className="error-text">{error}</p>}
           </section>
 
-          <section className="notifications-panel">
+          <section className="panel notifications-panel">
             <div className="notifications-head">
               <button type="button" className="notifications-title-btn" onClick={() => setAlertsOpen(true)}>
                 Notifications
@@ -585,7 +630,7 @@ export default function PriceSagePage() {
         </section>
 
         {loading && (
-          <section className="results-section">
+          <section className="panel results-section">
             <div className="results-head">
               <h3>Fetching live prices...</h3>
               <p className="best-price">Please wait</p>
@@ -604,7 +649,7 @@ export default function PriceSagePage() {
         )}
 
         {data && !loading && (
-          <section className="results-section">
+          <section className="panel results-section">
             <div className="results-head">
               <h3>{data.product}</h3>
               <p className="best-price">Current {data.sourceStore || "Store"} Price: {formatINR(data.sourcePrice)}</p>
@@ -634,18 +679,25 @@ export default function PriceSagePage() {
                 <h4>Exact Matches</h4>
                 <p>Matches found for the exact product from your pasted link.</p>
               </div>
-              {(data.stores || []).length > 0 ? (
+              <CombinedPriceGraph entries={combinedGraphEntries} maxPoints={36} />
+              {exactStoreEntries.length > 0 ? (
                 <div className="cards cards-scroll" onWheel={handleCardsWheel}>
-                  {(data.stores || []).map((item, index) => (
-                    <PriceCard
-                      key={index}
-                      item={item}
-                      bestPrice={data.bestPrice}
-                      logo={resolveStoreLogo(item.store, item.link)}
-                      onTrack={() => saveTrackedStore(item)}
-                      isTracked={trackedStore && trackedStore.store.toLowerCase() === item.store.toLowerCase()}
-                    />
-                  ))}
+                  {exactStoreEntries.map(({ item, historyKey, history }, index) => {
+                    const isTrackedItem = trackedStore?.trackKey
+                      ? trackedStore.trackKey === historyKey
+                      : trackedStore && trackedStore.store?.toLowerCase() === item.store?.toLowerCase();
+                    return (
+                      <PriceCard
+                        key={`${item.store || "store"}-${index}`}
+                        item={item}
+                        bestPrice={data.bestPrice}
+                        logo={resolveStoreLogo(item.store, item.link)}
+                        onTrack={() => saveTrackedStore(item)}
+                        isTracked={isTrackedItem}
+                        priceHistory={history}
+                      />
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="group-empty">Exact product not available across compared websites.</p>
