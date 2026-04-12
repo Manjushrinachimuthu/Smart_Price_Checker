@@ -1,0 +1,6 @@
+pricebackend/target/
+pricefrontend/node_modules/
+pricefrontend/build/
+.idea/
+*.jar
+*.zip
