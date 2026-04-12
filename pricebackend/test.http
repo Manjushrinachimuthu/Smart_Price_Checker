@@ -1,0 +1,9 @@
+POST http://localhost:8080/products
+Content-Type: application/json
+
+{
+  "name": "iPhone 15",
+  "price": 79999,
+  "website": "Amazon",
+  "imageUrl": "https://images.unsplash.com/photo-1695048133142-1a20484c8b50"
+}

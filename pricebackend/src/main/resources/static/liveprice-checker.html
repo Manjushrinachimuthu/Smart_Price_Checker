@@ -1,0 +1,1263 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live price checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --canvas: radial-gradient(circle at 20% -10%, rgba(14,165,233,0.25), transparent 40%), radial-gradient(circle at 80% 0%, rgba(16,185,129,0.2), transparent 45%), radial-gradient(circle at 50% 100%, rgba(248,113,113,0.2), transparent 55%), #030712;
+      --card: rgba(8,12,32,0.92);
+      --card-stroke: rgba(255,255,255,0.08);
+      --border: rgba(148,163,184,0.25);
+      --text: #e2e8f0;
+      --muted: rgba(226,232,240,0.7);
+      --accent: #f59e0b;
+      --success: #22c55e;
+      --danger: #fb7185;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--text);
+      font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+      position: relative;
+    }
+
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      background: radial-gradient(circle at 20% -10%, rgba(14,165,233,0.25), transparent 40%), radial-gradient(circle at 80% 0%, rgba(16,185,129,0.2), transparent 45%);
+      opacity: 0.9;
+    }
+
+    body::after {
+      background: radial-gradient(circle at 50% 100%, rgba(248,113,113,0.25), transparent 55%);
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(2,6,23,0.9));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 2.75rem;
+      box-shadow: 0 30px 60px rgba(2,6,23,0.5);
+      margin-bottom: 2.5rem;
+    }
+
+    .hero__tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.04);
+      margin-bottom: 1rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 3vw, 3.2rem);
+      margin: 0 0 0.75rem;
+      line-height: 1.25;
+    }
+
+    .hero__lede {
+      margin: 0;
+      color: var(--muted);
+      max-width: 640px;
+      font-size: 1rem;
+    }
+
+    .hero__form {
+      margin-top: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .input-group__label {
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .input-group__field {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.35rem;
+    }
+
+    .hero__form input {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.02);
+      padding: 0.9rem 1.2rem;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.25s ease, transform 0.25s ease;
+    }
+
+    .hero__form input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.25);
+    }
+
+    .hero__form button {
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      color: #0b0c10;
+      font-weight: 600;
+      padding: 0 1.4rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 1rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hero__form button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .hero__form button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 25px rgba(245,158,11,0.4);
+    }
+
+    .spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #0b0c10;
+      border-radius: 50%;
+      opacity: 0;
+      transform: rotate(0deg);
+    }
+
+    button.is-loading .spinner {
+      opacity: 1;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .helper {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .status-line {
+      min-height: 1.5rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .status-line[data-state="error"] {
+      color: var(--danger);
+    }
+
+    .status-line[data-state="loading"] {
+      color: var(--accent);
+    }
+
+    .status-line[data-state="success"] {
+      color: var(--success);
+    }
+
+    .results {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-stroke);
+      border-radius: 24px;
+      padding: 1.75rem;
+      box-shadow: 0 20px 45px rgba(2,6,23,0.45);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+
+    .summary-card__notice {
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 0.85rem;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.2);
+      font-weight: 500;
+    }
+
+    .summary-card__top {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .summary-card__image {
+      width: 110px;
+      height: 110px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.05);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .summary-card__image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: drop-shadow(0 10px 20px rgba(2,6,23,0.6));
+    }
+
+    .summary-card__body {
+      flex: 1;
+    }
+
+    .eyebrow {
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin: 0 0 0.35rem;
+    }
+
+    .summary-card h2 {
+      margin: 0;
+      font-size: clamp(1.6rem, 2vw, 2.3rem);
+    }
+
+    .summary-card__stats {
+      margin-top: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-label {
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+    }
+
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0.25rem 0 0;
+    }
+
+    .stat-meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-header h3 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .live-card__list,
+    .store-list,
+    .similar-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .live-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.85rem 1rem;
+      border-radius: 16px;
+      background: rgba(15,23,42,0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .live-row__meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .live-row__price {
+      font-weight: 600;
+      font-size: 1.1rem;
+      justify-self: flex-end;
+    }
+
+    .live-row__delta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .tracking-card__trend {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.7rem;
+    }
+
+    .tracking-card__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .tracking-card__rec {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .tracking-card__meta {
+      margin-top: 0.7rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .tracking-card__chart {
+      margin: 1.25rem 0 0.7rem;
+      padding: 1rem;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.58);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .tracking-card__chart-wrapper {
+      width: 100%;
+    }
+
+    .tracking-card__chart-wrapper canvas {
+      width: 100%;
+      height: 170px;
+      display: block;
+    }
+
+    .tracking-card__chart-empty {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .tracking-card__chart-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .price-graph-card {
+      margin-top: 1.5rem;
+    }
+
+    .price-graph-card canvas {
+      width: 100%;
+      min-height: 210px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .price-graph-note {
+      margin-top: 0.6rem;
+      font-size: 0.85rem;
+    }
+
+    .store-row {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.8rem;
+      align-items: center;
+      background: rgba(15,23,42,0.6);
+    }
+
+    .store-row__title {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .store-row__meta {
+      margin: 0.4rem 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .store-row__price-group {
+      text-align: right;
+    }
+
+    .store-row__price {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .store-row__delta {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .store-row__link {
+      border-radius: 999px;
+      padding: 0.45rem 0.95rem;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .store-row__link.disabled {
+      pointer-events: none;
+      color: rgba(255,255,255,0.4);
+      border-color: rgba(255,255,255,0.05);
+    }
+
+    .similar-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .similar-tile {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 1rem;
+      background: rgba(15,23,42,0.5);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      min-height: 140px;
+      transition: transform 0.2s ease, border 0.2s ease;
+    }
+
+    .similar-tile:hover {
+      transform: translateY(-5px);
+      border-color: rgba(245,158,11,0.8);
+    }
+
+    .similar-tile.disabled {
+      opacity: 0.6;
+      pointer-events: none;
+      border-color: rgba(255,255,255,0.05);
+    }
+
+    .similar-tile__title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .similar-tile__price {
+      margin: 0.45rem 0 0;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    @media (max-width: 840px) {
+      .input-group__field {
+        flex-direction: column;
+      }
+
+      .live-row,
+      .store-row {
+        grid-template-columns: 1fr;
+      }
+
+      .store-row__price-group {
+        text-align: left;
+      }
+
+      .store-row__link {
+        justify-self: flex-start;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero {
+        padding: 2rem;
+      }
+
+      .card {
+        padding: 1.35rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="hero__tag">Live price intelligence</p>
+      <h1>See how the market is pricing your next purchase</h1>
+      <p class="hero__lede">Paste a product link from Amazon, Flipkart, Google or any retailer and we'll surface live offers, savings, and tracked history in one glance.</p>
+      <form id="checker-form" class="hero__form">
+        <label class="input-group__label" for="product-url">Product URL</label>
+        <div class="input-group__field">
+          <input id="product-url" name="productUrl" type="url" placeholder="https://www.amazon.in/dp/B0..." required>
+          <button type="submit">
+            <span>Compare prices</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+        <p class="helper">Only the target URL is shared with the backend; nothing else is stored.</p>
+        <div class="status-line" id="form-status" aria-live="polite"></div>
+      </form>
+    </header>
+    <section id="results" class="results" hidden>
+      <article class="card summary-card">
+        <div id="notice" class="summary-card__notice" hidden></div>
+        <div class="summary-card__top">
+          <div class="summary-card__image">
+            <img id="product-image" alt="Product preview" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20240%20240%22%3E%3Crect%20width=%22240%22%20height=%22240%22%20fill=%22030b20%22/%3E%3Ctext%20x=%22120%22%20y=%22140%22%20text-anchor=%22middle%22%20fill=%2294a3b8%22%20font-family=%22Space%20Grotesk%22%20font-size=%2230%22%3ELive%3C/text%3E%3C/svg%3E">
+          </div>
+          <div class="summary-card__body">
+            <p class="eyebrow" id="summary-store">Source store</p>
+            <h2 id="summary-title">Product title</h2>
+            <p class="muted" id="summary-subtitle">Detected details</p>
+          </div>
+        </div>
+        <div class="summary-card__stats">
+          <div>
+            <p class="stat-label">Best price</p>
+            <p class="stat-value" id="best-price">—</p>
+            <p class="stat-meta" id="best-price-meta"></p>
+          </div>
+          <div>
+            <p class="stat-label">Highest shown</p>
+            <p class="stat-value" id="highest-price">—</p>
+            <p class="stat-meta" id="highest-price-meta"></p>
+          </div>
+          <div>
+            <p class="stat-label">Savings</p>
+            <p class="stat-value" id="savings">—</p>
+            <p class="stat-meta" id="savings-meta"></p>
+          </div>
+          <div>
+            <p class="stat-label">Fetched</p>
+            <p class="stat-value" id="fetched-at">—</p>
+            <p class="stat-meta" id="cache-info"></p>
+          </div>
+        </div>
+      </article>
+      <article class="card price-graph-card">
+        <div class="card-header">
+          <h3>Price graph</h3>
+          <p class="muted">Visualize how merchants are pricing this product right now.</p>
+        </div>
+        <canvas id="price-spread-chart" role="img" aria-label="Price spread across stores"></canvas>
+        <p class="muted price-graph-note" id="price-graph-note">Waiting for store offers to draw the graph.</p>
+      </article>
+      <div class="grid-two">
+        <article class="card live-card">
+          <div class="card-header">
+            <h3>Live comparison</h3>
+            <p class="muted">Targets: Amazon · Flipkart · Google</p>
+          </div>
+          <div id="live-comparison-list" class="live-card__list"></div>
+        </article>
+        <article class="card tracking-card" id="tracking-card" hidden>
+          <div class="card-header">
+            <h3>Price trend</h3>
+            <p class="muted">Accumulated scans for this product key</p>
+          </div>
+          <div class="tracking-card__trend" id="tracking-trend"></div>
+          <div class="tracking-card__grid">
+            <div>
+              <p class="stat-label">Lowest seen</p>
+              <p class="stat-value" id="tracking-lowest">—</p>
+            </div>
+            <div>
+              <p class="stat-label">Highest seen</p>
+              <p class="stat-value" id="tracking-highest">—</p>
+            </div>
+            <div>
+              <p class="stat-label">Samples</p>
+              <p class="stat-value" id="tracking-samples">0</p>
+            </div>
+            <div>
+              <p class="stat-label">Volatility</p>
+              <p class="stat-value" id="tracking-volatility">—</p>
+            </div>
+          </div>
+          <div class="tracking-card__chart">
+            <div class="tracking-card__chart-wrapper" id="tracking-chart-wrapper">
+              <canvas id="price-history-chart" role="img" aria-label="Price history over time"></canvas>
+            </div>
+          <p class="tracking-card__chart-empty" id="tracking-chart-empty">Need a scan before we can draw the price curve.</p>
+            <div class="tracking-card__chart-meta">
+              <span id="tracking-chart-count">0 scans</span>
+              <span id="tracking-chart-range">—</span>
+            </div>
+          </div>
+          <p class="tracking-card__rec" id="tracking-recommendation">No recommendation yet.</p>
+          <div class="tracking-card__meta">
+            <span id="tracking-confidence"></span>
+            <span id="tracking-week"></span>
+          </div>
+        </article>
+      </div>
+      <article class="card stores-card">
+        <div class="card-header">
+          <h3>Shops we found</h3>
+          <p class="muted">Sorted by price; click to open.</p>
+        </div>
+        <div id="store-list" class="store-list"></div>
+      </article>
+      <article class="card similar-card">
+        <div class="card-header">
+          <h3>Similar deals</h3>
+          <p class="muted">Alternative listings that looked relevant.</p>
+        </div>
+        <div id="similar-products" class="similar-grid"></div>
+      </article>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const currencyFormatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+    const placeholderImage = "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20240%20240%22%3E%3Crect%20width=%22240%22%20height=%22240%22%20fill=%22030b20%22/%3E%3Ctext%20x=%22120%22%20y=%22140%22%20text-anchor=%22middle%22%20fill=%2294a3b8%22%20font-family=%22Space%20Grotesk%22%20font-size=%2230%22%3ELive%3C/text%3E%3C/svg%3E";
+
+    const form = document.getElementById('checker-form');
+    const urlInput = document.getElementById('product-url');
+    const statusLine = document.getElementById('form-status');
+    const resultsSection = document.getElementById('results');
+    const notice = document.getElementById('notice');
+    const summaryTitle = document.getElementById('summary-title');
+    const summaryStore = document.getElementById('summary-store');
+    const summarySubtitle = document.getElementById('summary-subtitle');
+    const summaryImage = document.getElementById('product-image');
+    const bestPriceEl = document.getElementById('best-price');
+    const bestPriceMeta = document.getElementById('best-price-meta');
+    const highestEl = document.getElementById('highest-price');
+    const highestMeta = document.getElementById('highest-price-meta');
+    const savingsEl = document.getElementById('savings');
+    const savingsMeta = document.getElementById('savings-meta');
+    const fetchedAtEl = document.getElementById('fetched-at');
+    const cacheInfoEl = document.getElementById('cache-info');
+    const liveList = document.getElementById('live-comparison-list');
+    const storeList = document.getElementById('store-list');
+    const similarList = document.getElementById('similar-products');
+    const priceGraphCanvas = document.getElementById('price-spread-chart');
+    const priceGraphNote = document.getElementById('price-graph-note');
+    const priceHistoryLimit = 20;
+    const priceHistory = [];
+    const priceTimelineChart = priceGraphCanvas ? new Chart(priceGraphCanvas, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Price over time',
+          data: [],
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245,158,11,0.25)',
+          tension: 0.35,
+          pointRadius: 3,
+          pointBackgroundColor: '#f59e0b',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            ticks: { color: 'rgba(226,232,240,0.9)' },
+            grid: { display: false }
+          },
+          y: {
+            ticks: {
+              color: 'rgba(226,232,240,0.9)',
+              callback: value => currencyFormatter.format(value)
+            },
+            grid: { color: 'rgba(148,163,184,0.4)' },
+            beginAtZero: false
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0b0c10',
+            titleColor: '#f59e0b',
+            bodyColor: '#e2e8f0',
+            callbacks: {
+              label: context => `${formatCurrency(context.parsed.y)}`
+            }
+          }
+        }
+      }
+    }) : null;
+    const trackingCard = document.getElementById('tracking-card');
+    const trackingTrend = document.getElementById('tracking-trend');
+    const trackingLowest = document.getElementById('tracking-lowest');
+    const trackingHighest = document.getElementById('tracking-highest');
+    const trackingSamples = document.getElementById('tracking-samples');
+    const trackingVolatility = document.getElementById('tracking-volatility');
+    const trackingRecommendation = document.getElementById('tracking-recommendation');
+    const trackingConfidence = document.getElementById('tracking-confidence');
+    const trackingWeek = document.getElementById('tracking-week');
+    const trackingChartCanvas = document.getElementById('price-history-chart');
+    const trackingChartWrapper = document.getElementById('tracking-chart-wrapper');
+    const trackingChartEmpty = document.getElementById('tracking-chart-empty');
+    const trackingChartCount = document.getElementById('tracking-chart-count');
+    const trackingChartRange = document.getElementById('tracking-chart-range');
+    const submitButton = form.querySelector('button');
+
+    function formatCurrency(value) {
+      if (value == null || Number.isNaN(value)) return '—';
+      return currencyFormatter.format(value);
+    }
+
+    function formatDelta(current, best) {
+      if (current == null || best == null || Number.isNaN(current) || Number.isNaN(best)) return '—';
+      const diff = current - best;
+      if (diff === 0) return 'Best price';
+      const abs = currencyFormatter.format(Math.abs(diff));
+      return diff > 0 ? `+${abs} above best` : `-${abs} below best`;
+    }
+
+    function formatSigned(value) {
+      if (value == null || Number.isNaN(value)) return '—';
+      const abs = currencyFormatter.format(Math.abs(value));
+      return value >= 0 ? `+${abs}` : `-${abs}`;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      const parsed = new Date(iso);
+      if (Number.isNaN(parsed.getTime())) return '—';
+      return parsed.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
+    function formatTimelineLabel(date) {
+      const parsed = date instanceof Date ? date : new Date(date);
+      if (Number.isNaN(parsed.getTime())) return '';
+      return parsed.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function refreshPriceTimelineChart() {
+      if (!priceTimelineChart) return;
+      priceTimelineChart.data.labels = priceHistory.map(entry => formatTimelineLabel(entry.time));
+      priceTimelineChart.data.datasets[0].data = priceHistory.map(entry => entry.price);
+      priceTimelineChart.update('none');
+      if (priceHistory.length) {
+        const latest = priceHistory[priceHistory.length - 1];
+        priceGraphNote.textContent = `Last ${priceHistory.length} sample${priceHistory.length === 1 ? '' : 's'} · ${formatCurrency(latest.price)} at ${formatTimelineLabel(latest.time)}`;
+      } else {
+        priceGraphNote.textContent = 'Waiting for the first price…';
+      }
+    }
+
+    function addPriceSample(price, timestamp) {
+      const value = Number(price);
+      if (!Number.isFinite(value) || value <= 0) return;
+      const pointTime = timestamp ? new Date(timestamp) : new Date();
+      if (Number.isNaN(pointTime.getTime())) return;
+      priceHistory.push({ time: pointTime, price: value });
+      if (priceHistory.length > priceHistoryLimit) priceHistory.shift();
+      refreshPriceTimelineChart();
+    }
+
+    refreshPriceTimelineChart();
+
+    function setStatus(message, mode = '') {
+      statusLine.textContent = message;
+      statusLine.dataset.state = mode;
+    }
+
+    function setLoading(flag) {
+      submitButton.disabled = flag;
+      submitButton.classList.toggle('is-loading', flag);
+    }
+
+    function updateUrlParameter(payloadUrl) {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (payloadUrl) {
+          params.set('url', payloadUrl);
+        } else {
+          params.delete('url');
+        }
+        const base = window.location.pathname;
+        const query = params.toString();
+        window.history.replaceState({}, '', query ? `${base}?${query}` : base);
+      } catch (error) {
+        console.warn('Unable to update query params', error);
+      }
+    }
+
+    function renderLiveComparison(list, bestPrice) {
+      liveList.innerHTML = '';
+      if (!list.length) {
+        const empty = document.createElement('p');
+        empty.className = 'muted';
+        empty.textContent = 'No prioritized stores responded for this query.';
+        liveList.appendChild(empty);
+        return;
+      }
+      list.forEach(entry => {
+        const row = document.createElement('div');
+        row.className = 'live-row';
+
+        const meta = document.createElement('div');
+        meta.className = 'live-row__meta';
+        const name = document.createElement('p');
+        name.className = 'store-row__title';
+        name.textContent = entry.store ?? 'Store';
+        meta.appendChild(name);
+        const description = entry.title ?? entry.details ?? '';
+        if (description) {
+          const desc = document.createElement('p');
+          desc.className = 'muted';
+          desc.textContent = description;
+          meta.appendChild(desc);
+        }
+
+        const price = document.createElement('p');
+        price.className = 'live-row__price';
+        price.textContent = formatCurrency(entry.price);
+
+        const delta = document.createElement('span');
+        delta.className = 'live-row__delta';
+        delta.textContent = formatDelta(entry.price, bestPrice);
+
+        const action = document.createElement('a');
+        action.className = 'store-row__link';
+        if (entry.link) {
+          action.href = entry.link;
+          action.target = '_blank';
+          action.rel = 'noopener';
+          action.textContent = 'Open store';
+        } else {
+          action.textContent = 'Link not available';
+          action.classList.add('disabled');
+          action.setAttribute('aria-disabled', 'true');
+        }
+
+        row.append(meta, price, delta, action);
+        liveList.appendChild(row);
+      });
+    }
+
+    function renderStoreList(list, bestPrice) {
+      storeList.innerHTML = '';
+      if (!list.length) {
+        const empty = document.createElement('p');
+        empty.className = 'muted';
+        empty.textContent = 'No store offers were returned for this search.';
+        storeList.appendChild(empty);
+        return;
+      }
+      list.forEach(entry => {
+        const row = document.createElement('div');
+        row.className = 'store-row';
+
+        const info = document.createElement('div');
+        const title = document.createElement('p');
+        title.className = 'store-row__title';
+        title.textContent = entry.store ?? 'Merchant';
+        info.appendChild(title);
+        const details = document.createElement('p');
+        details.className = 'muted';
+        details.textContent = entry.details ?? 'Live price result';
+        info.appendChild(details);
+        const ratingValue = Number(entry.rating);
+        if (Number.isFinite(ratingValue)) {
+          const rating = document.createElement('p');
+          rating.className = 'store-row__meta';
+          const reviewCountValue = Number(entry.reviewCount);
+          const reviews = Number.isFinite(reviewCountValue) ? ` · ${Math.round(reviewCountValue)} reviews` : '';
+          rating.textContent = `${ratingValue.toFixed(1)}★${reviews}`;
+          info.appendChild(rating);
+        }
+
+        const priceGroup = document.createElement('div');
+        priceGroup.className = 'store-row__price-group';
+        const priceValue = document.createElement('p');
+        priceValue.className = 'store-row__price';
+        priceValue.textContent = formatCurrency(entry.price);
+        const delta = document.createElement('p');
+        delta.className = 'store-row__delta';
+        delta.textContent = formatDelta(entry.price, bestPrice);
+        priceGroup.append(priceValue, delta);
+
+        const action = document.createElement(entry.link ? 'a' : 'span');
+        action.className = 'store-row__link';
+        if (entry.link) {
+          action.href = entry.link;
+          action.target = '_blank';
+          action.rel = 'noopener';
+          action.textContent = 'Open deal';
+        } else {
+          action.textContent = 'Link missing';
+          action.classList.add('disabled');
+          action.setAttribute('aria-disabled', 'true');
+        }
+
+        row.append(info, priceGroup, action);
+        storeList.appendChild(row);
+      });
+    }
+
+    function renderSimilar(list) {
+      similarList.innerHTML = '';
+      if (!list.length) {
+        const fallback = document.createElement('p');
+        fallback.className = 'muted';
+        fallback.textContent = 'No similar offers detected yet.';
+        similarList.appendChild(fallback);
+        return;
+      }
+      list.forEach(entry => {
+        const tile = document.createElement('a');
+        tile.className = 'similar-tile';
+        tile.href = entry.link ?? '#';
+        if (entry.link) {
+          tile.target = '_blank';
+          tile.rel = 'noopener';
+        } else {
+          tile.classList.add('disabled');
+          tile.setAttribute('aria-disabled', 'true');
+          tile.addEventListener('click', event => event.preventDefault());
+        }
+        const title = document.createElement('p');
+        title.className = 'similar-tile__title';
+        title.textContent = entry.title ?? entry.store ?? 'Alternative price';
+        const meta = document.createElement('p');
+        meta.className = 'muted';
+        meta.textContent = entry.store ? `Store · ${entry.store}` : 'Similar listing';
+        const price = document.createElement('p');
+        price.className = 'similar-tile__price';
+        price.textContent = formatCurrency(entry.price);
+        tile.append(title, meta, price);
+        similarList.appendChild(tile);
+      });
+    }
+
+    let trackingChartSnapshot = null;
+
+    function clearPriceHistoryCanvas() {
+      if (!trackingChartCanvas) return;
+      const ctx = trackingChartCanvas.getContext('2d');
+      if (!ctx) return;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, trackingChartCanvas.width, trackingChartCanvas.height);
+    }
+
+    function renderPriceHistory(history) {
+      if (!trackingChartCount || !trackingChartRange || !trackingChartEmpty) return;
+      const entries = Array.isArray(history) ? history.slice() : [];
+      const samples = entries
+        .map(entry => {
+          const price = Number(entry?.bestPrice);
+          const time = entry?.timestamp ? new Date(entry.timestamp).getTime() : NaN;
+          return { price, time };
+        })
+        .filter(pt => Number.isFinite(pt.price) && Number.isFinite(pt.time))
+        .sort((a, b) => a.time - b.time);
+
+      trackingChartCount.textContent = `${samples.length} scan${samples.length === 1 ? '' : 's'}`;
+      trackingChartEmpty.hidden = samples.length >= 1;
+
+      if (samples.length === 0) {
+        trackingChartRange.textContent = 'Waiting for the first scan…';
+        trackingChartSnapshot = null;
+        clearPriceHistoryCanvas();
+        return;
+      }
+
+      const minPrice = Math.min(...samples.map(pt => pt.price));
+      const maxPrice = Math.max(...samples.map(pt => pt.price));
+      trackingChartRange.textContent = samples.length > 1
+        ? `${formatCurrency(minPrice)} – ${formatCurrency(maxPrice)}`
+        : `${formatCurrency(minPrice)} (more scans will extend the curve)`;
+
+      trackingChartSnapshot = { points: samples, minPrice, maxPrice };
+      drawPriceHistory(trackingChartSnapshot);
+    }
+
+    function drawPriceHistory(snapshot) {
+      if (!trackingChartCanvas || !trackingChartWrapper || !snapshot) return;
+      const ctx = trackingChartCanvas.getContext('2d');
+      if (!ctx) return;
+      const width = Math.max(trackingChartWrapper.clientWidth, 280);
+      const height = 170;
+      const dpr = window.devicePixelRatio || 1;
+      trackingChartCanvas.width = width * dpr;
+      trackingChartCanvas.height = height * dpr;
+      trackingChartCanvas.style.width = `${width}px`;
+      trackingChartCanvas.style.height = `${height}px`;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, width, height);
+
+      const padding = 14;
+      const innerWidth = width - padding * 2;
+      const innerHeight = height - padding * 2;
+      if (innerWidth <= 0 || innerHeight <= 0) return;
+
+      const minTime = snapshot.points[0].time;
+      const maxTime = snapshot.points[snapshot.points.length - 1].time;
+      const timeSpan = maxTime - minTime || 1;
+      const priceRange = snapshot.maxPrice - snapshot.minPrice || snapshot.maxPrice * 0.1 || 1;
+
+      const normalized = snapshot.points.map(point => {
+        const x = padding + ((point.time - minTime) / timeSpan) * innerWidth;
+        const y = padding + innerHeight - ((point.price - snapshot.minPrice) / priceRange) * innerHeight;
+        return { ...point, x, y };
+      });
+
+      const baseY = padding + innerHeight;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      normalized.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.lineTo(normalized[normalized.length - 1].x, baseY);
+      ctx.lineTo(normalized[0].x, baseY);
+      ctx.closePath();
+
+      const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+      gradient.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
+      gradient.addColorStop(1, 'rgba(14, 165, 233, 0.05)');
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      ctx.beginPath();
+      normalized.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#fbbf24';
+      ctx.stroke();
+
+      const latest = normalized[normalized.length - 1];
+      ctx.beginPath();
+      ctx.arc(latest.x, latest.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.stroke();
+    }
+
+    function computeTrackingStats(tracking) {
+      const history = Array.isArray(tracking.history) ? tracking.history : [];
+      const prices = history.map(entry => Number(entry.bestPrice)).filter(Number.isFinite);
+      const samples = Number(tracking.samples ?? prices.length);
+      const latest = prices.length ? prices[prices.length - 1] : null;
+      const weekIndex = Math.max(0, prices.length - 8);
+      const weekChange = prices.length && prices.length > weekIndex ? latest - prices[weekIndex] : null;
+      const mean = prices.length ? prices.reduce((sum, price) => sum + price, 0) / prices.length : 0;
+      const variance = prices.length ? prices.reduce((sum, price) => sum + Math.pow(price - mean, 2), 0) / prices.length : 0;
+      const volatility = mean ? (Math.sqrt(variance) / mean) * 100 : 0;
+      return { latest, weekChange, samples, volatility };
+    }
+
+    function renderTracking(tracking) {
+      const stats = computeTrackingStats(tracking);
+      trackingCard.hidden = false;
+      trackingTrend.textContent = tracking.trend || 'Trend data';
+      trackingLowest.textContent = formatCurrency(tracking.lowestSeen);
+      trackingHighest.textContent = formatCurrency(tracking.highestSeen);
+      trackingSamples.textContent = stats.samples ? String(stats.samples) : '0';
+      trackingVolatility.textContent = stats.samples > 1 ? `${stats.volatility.toFixed(1)}%` : '—';
+      const trendText = (tracking.trend ?? '').toLowerCase();
+      if (trendText.includes('down')) {
+        trackingRecommendation.textContent = 'Price trend is down; waiting longer may yield a better deal.';
+      } else if (trendText.includes('up')) {
+        trackingRecommendation.textContent = 'Price is rising; lock it in while it is still low.';
+      } else {
+        trackingRecommendation.textContent = 'Price is mostly stable. Buy when you need it.';
+      }
+      const confidence = stats.samples >= 30 ? 'High' : stats.samples >= 10 ? 'Medium' : 'Low';
+      trackingConfidence.textContent = `Confidence: ${confidence}`;
+      trackingWeek.textContent = stats.weekChange != null ? `Week shift: ${formatSigned(stats.weekChange)}` : '';
+      renderPriceHistory(tracking.history);
+    }
+
+    function renderResults(data) {
+      resultsSection.hidden = false;
+      if (data.notice) {
+        notice.textContent = data.notice;
+        notice.hidden = false;
+      } else {
+        notice.hidden = true;
+      }
+
+      summaryTitle.textContent = data.product ?? 'Product';
+      summaryStore.textContent = data.sourceStore ? `${data.sourceStore} capture` : 'Source store';
+      summarySubtitle.textContent = data.productKey ? `Product key · ${data.productKey}` : 'Live price scan';
+      const imageCandidate = data.stores?.[0]?.image || data.similarProducts?.[0]?.image || placeholderImage;
+      summaryImage.src = imageCandidate || placeholderImage;
+      summaryImage.alt = data.product ?? 'Product preview';
+
+      const bestPrice = data.bestPrice;
+      bestPriceEl.textContent = formatCurrency(bestPrice);
+      bestPriceMeta.textContent = data.sourceStore ? `Source: ${data.sourceStore}` : 'Live comparison';
+
+      highestEl.textContent = formatCurrency(data.highestPrice);
+      highestMeta.textContent = data.highestPrice && bestPrice ? formatDelta(data.highestPrice, bestPrice) : '';
+
+      savingsEl.textContent = formatCurrency(data.savings);
+      savingsMeta.textContent = data.anomalyFilteredCount ? `${data.anomalyFilteredCount} filtered result(s)` : 'Market snapshot';
+
+      fetchedAtEl.textContent = formatDate(data.fetchedAt);
+      if (data.cache) {
+        const ttlSeconds = Math.round((data.cache.ttlMs ?? 0) / 1000);
+        const cacheLabel = data.cache.hit ? 'Served from cache' : 'Live fetch';
+        cacheInfoEl.textContent = `${cacheLabel} · TTL ${ttlSeconds}s`;
+      } else {
+        cacheInfoEl.textContent = 'Live fetch';
+      }
+
+      renderLiveComparison(data.liveComparison ?? [], bestPrice);
+      renderStoreList(data.stores ?? [], bestPrice);
+      const timelinePrice = data.bestPrice ?? data.sourcePrice ?? data.stores?.[0]?.price ?? null;
+      addPriceSample(timelinePrice, data.fetchedAt);
+      renderSimilar(data.similarProducts ?? []);
+
+      const hasTracking = data.tracking && (Number(data.tracking.samples ?? 0) > 0 || (Array.isArray(data.tracking.history) && data.tracking.history.length > 1));
+      if (hasTracking) {
+        renderTracking(data.tracking);
+      } else {
+        trackingCard.hidden = true;
+      }
+    }
+
+    async function fetchCompare(urlOverride) {
+      const targetUrl = (urlOverride ?? urlInput.value).trim();
+      if (!targetUrl) {
+        setStatus('Provide a product link first.', 'error');
+        return;
+      }
+      setLoading(true);
+      setStatus('Comparing live prices…', 'loading');
+      resultsSection.hidden = true;
+      try {
+        const response = await fetch('/compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: targetUrl })
+        });
+        const text = await response.text();
+        let data = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch (error) {
+          data = { error: text || 'Unexpected response' };
+        }
+        if (!response.ok) {
+          throw new Error(data?.error || 'Unable to compare live prices');
+        }
+        renderResults(data);
+        setStatus('Prices refreshed just now.', 'success');
+        updateUrlParameter(targetUrl);
+      } catch (error) {
+        setStatus(error.message || 'Something went wrong.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      fetchCompare();
+    });
+
+    window.addEventListener('resize', () => {
+      if (trackingChartSnapshot) drawPriceHistory(trackingChartSnapshot);
+      if (priceTimelineChart) priceTimelineChart.resize();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setStatus('Paste a product URL to compare.', '');
+      const params = new URLSearchParams(window.location.search);
+      const autoUrl = params.get('url');
+      if (autoUrl) {
+        urlInput.value = autoUrl;
+        fetchCompare(autoUrl);
+      }
+    });
+  </script>
+</body>
+</html>
